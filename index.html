@@ -1109,15 +1109,24 @@
       }
     }
 
-    /* 从 GitHub 读取 data.json */
+    /* 从 GitHub API 直接读取（无缓存延迟，实时同步） */
     function loadFromCloud(callback) {
-      var url = getRawUrl();
-      fetch(url)
+      var apiUrl = getApiUrl();
+      var headers = { 'Accept': 'application/vnd.github.v3+json' };
+      var token = getToken();
+      if (token) {
+        headers['Authorization'] = 'token ' + token;
+      }
+      fetch(apiUrl, { headers: headers, cache: 'no-cache' })
         .then(function (res) {
           if (!res.ok) throw new Error('HTTP ' + res.status);
           return res.json();
         })
-        .then(function (data) {
+        .then(function (fileInfo) {
+          var raw = atob(fileInfo.content.replace(/\s/g, ''));
+          // UTF-8 解码
+          var decoded = decodeURIComponent(escape(raw));
+          var data = JSON.parse(decoded);
           if (Array.isArray(data) && data.length > 0) {
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
             callback(data);

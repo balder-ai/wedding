@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>婚礼当天时间安排表</title>
+
+  <!-- GitHub 云端存储配置 -->
+  <script>
+    // ===== ⚠️ 部署前替换为你的 GitHub 信息 =====
+    // 1. 去 https://github.com 注册账号
+    // 2. 创建一个仓库（如 wedding-timeline）
+    // 3. 替换下面的用户名和仓库名
+    var GH_CONFIG = {
+      username: "balder-ai",
+      repo: "wedding"
+    };
+
+    var CLOUD_ENABLED = (GH_CONFIG.username !== 'YOUR_GITHUB_USERNAME');
+
+    // 读取 URL
+    function getRawUrl() {
+      return 'https://raw.githubusercontent.com/' +
+        GH_CONFIG.username + '/' + GH_CONFIG.repo + '/main/data.json';
+    }
+
+    // 写入 API URL
+    function getApiUrl() {
+      return 'https://api.github.com/repos/' +
+        GH_CONFIG.username + '/' + GH_CONFIG.repo + '/contents/data.json';
+    }
+  </script>
+
+  <style>
+    /* ===== 基础重置 ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ===== 页面整体 ===== */
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+      background-color: #F0F6FC;
+      color: #333333;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ===== 页面标题 ===== */
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .page-title {
+      font-size: 26px;
+      font-weight: bold;
+      color: #1565C0;
+      letter-spacing: 2px;
+    }
+    .page-subtitle {
+      font-size: 13px;
+      color: #888888;
+      margin-top: 4px;
+    }
+
+    /* ===== 主容器：双栏布局 ===== */
+    .main-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    /* ===== 卡片通用样式 ===== */
+    .card {
+      background: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      padding: 24px;
+    }
+
+    /* ===== 左侧：时间表 ===== */
+    .timeline-panel {
+      flex: 6;
+      min-width: 0;
+    }
+    .timeline-panel .card-header {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1565C0;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #E0E8F0;
+    }
+
+    /* 活动列表容器 */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 单行活动 */
+    .activity-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #FAFBFC;
+      border: 1px solid #E0E8F0;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .activity-row:hover {
+      background: #F0F6FC;
+    }
+    /* 起床行高亮 */
+    .activity-row.wakeup {
+      background: #FFF8E1;
+      border-color: #FFE082;
+    }
+
+    /* 活动名称输入框 */
+    .activity-name {
+      flex: 3;
+      min-width: 80px;
+      padding: 8px 12px;
+      border: 1px solid #E0E8F0;
+      border-radius: 6px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #333;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .activity-name:focus {
+      border-color: #1976D2;
+    }
+    .activity-name::placeholder {
+      color: #bbb;
+    }
+
+    /* 时间选择器 */
+    .activity-time {
+      width: 90px;
+      padding: 8px 10px;
+      border: 1px solid #E0E8F0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #333;
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .activity-time:focus {
+      border-color: #1976D2;
+    }
+
+    /* 持续时长输入框 */
+    .activity-duration {
+      width: 80px;
+      padding: 8px 10px;
+      border: 1px solid #E0E8F0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #333;
+      background: #fff;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .activity-duration:focus {
+      border-color: #1976D2;
+    }
+    /* 时长单位标签 */
+    .duration-unit {
+      font-size: 13px;
+      color: #888;
+      margin-left: -4px;
+      margin-right: 4px;
+      user-select: none;
+    }
+
+    /* 结束时间显示 */
+    .activity-end {
+      font-size: 13px;
+      color: #888888;
+      white-space: nowrap;
+      min-width: 55px;
+      text-align: center;
+    }
+
+    /* 删除按钮 */
+    .btn-delete {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 50%;
+      background: #FFEBEE;
+      color: #EF5350;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-delete:hover {
+      background: #EF5350;
+      color: #fff;
+    }
+    .btn-delete:active {
+      transform: scale(0.9);
+    }
+
+    /* 底部按钮区域 */
+    .timeline-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn:active {
+      transform: scale(0.96);
+    }
+    .btn-add {
+      background: #1976D2;
+      color: #fff;
+    }
+    .btn-add:hover {
+      background: #1565C0;
+    }
+    .btn-save {
+      background: #43A047;
+      color: #fff;
+    }
+    .btn-save:hover {
+      background: #388E3C;
+    }
+    .btn-reset {
+      background: #fff;
+      color: #888;
+      border: 1px solid #E0E8F0;
+      margin-left: auto;
+    }
+    .btn-reset:hover {
+      background: #FFF3E0;
+      color: #E65100;
+      border-color: #FFCC80;
+    }
+
+    /* ===== 新行入场动画 ===== */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .activity-row.anim-slide-in {
+      animation: slideIn 0.35s ease-out;
+    }
+
+    /* ===== 时间冲突提醒 ===== */
+    .activity-row.conflict {
+      border-left: 3px solid #FF9800;
+      background: #FFF8E1;
+    }
+    .activity-row.conflict .activity-end {
+      color: #E65100;
+      font-weight: bold;
+    }
+
+    /* ===== 倒计时数字过渡 ===== */
+    .countdown-number {
+      transition: transform 0.15s ease-out;
+    }
+    .countdown-number.pulse {
+      transform: scale(1.12);
+    }
+
+    /* ===== 右侧：倒计时卡片 ===== */
+    .countdown-panel {
+      flex: 4;
+      min-width: 280px;
+    }
+    .countdown-card {
+      background: #E3F2FD;
+      border: 2px solid #BBDEFB;
+      text-align: center;
+    }
+    .countdown-title {
+      font-size: 16px;
+      color: #1565C0;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .countdown-digits {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .countdown-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 60px;
+    }
+    .countdown-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #0D47A1;
+      font-family: "SF Mono", "Consolas", "Menlo", monospace;
+      line-height: 1.2;
+    }
+    .countdown-label {
+      font-size: 12px;
+      color: #888888;
+      margin-top: 2px;
+    }
+    .countdown-separator {
+      font-size: 28px;
+      color: #1565C0;
+      font-weight: bold;
+      align-self: flex-start;
+      margin-top: 8px;
+    }
+    .wedding-date-info {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #888888;
+      padding-top: 12px;
+      border-top: 1px dashed #BBDEFB;
+    }
+
+    /* ===== Toast 提示 ===== */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #43A047;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+
+    /* ===== 查看模式：只读样式 ===== */
+    body.view-mode .timeline-actions {
+      display: none;          /* 隐藏编辑按钮 */
+    }
+    body.view-mode .btn-delete {
+      display: none;          /* 隐藏删除按钮 */
+    }
+    body.view-mode .activity-name,
+    body.view-mode .activity-time,
+    body.view-mode .activity-duration {
+      pointer-events: none;   /* 禁止交互 */
+      border-color: transparent;
+      background: transparent;
+      color: #333;
+      cursor: default;
+    }
+    body.view-mode .activity-name {
+      font-weight: 500;
+    }
+    body.view-mode .activity-row {
+      background: #FAFBFC;
+      cursor: default;
+    }
+    body.view-mode .activity-row.wakeup {
+      background: #FFF8E1;
+    }
+
+    /* ===== 锁按钮 ===== */
+    .lock-bar {
+      text-align: center;
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid #E0E8F0;
+    }
+    .btn-lock {
+      background: none;
+      border: 1px solid #E0E8F0;
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-lock:hover {
+      background: #F0F6FC;
+      color: #1565C0;
+      border-color: #BBDEFB;
+    }
+    body.edit-mode .btn-lock.lock-icon::before {
+      content: '🔓 ';
+    }
+    body.view-mode .btn-lock.lock-icon::before {
+      content: '🔒 ';
+    }
+
+    /* ===== 密码弹窗 ===== */
+    .pw-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .pw-dialog {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 24px 20px;
+      width: 320px;
+      max-width: 90vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+    .pw-dialog h3 {
+      font-size: 17px;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .pw-dialog .pw-hint {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+    .pw-dialog input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #E0E8F0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      text-align: center;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    .pw-dialog input:focus {
+      border-color: #1976D2;
+    }
+    .pw-dialog .pw-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .pw-dialog .pw-actions button {
+      padding: 8px 22px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    .pw-dialog .btn-pw-confirm {
+      background: #1976D2;
+      color: #fff;
+    }
+    .pw-dialog .btn-pw-confirm:hover {
+      background: #1565C0;
+    }
+    .pw-dialog .btn-pw-cancel {
+      background: #F5F5F5;
+      color: #666;
+    }
+    .pw-dialog .btn-pw-cancel:hover {
+      background: #E0E0E0;
+    }
+    .pw-error {
+      color: #EF5350;
+      font-size: 13px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    /* ===== 查看模式提示条 ===== */
+    .view-notice {
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 8px;
+    }
+
+    /* ===== 手机端适配 ===== */
+    @media (max-width: 767px) {
+      body {
+        padding: 8px;
+      }
+
+      /* 标题缩小 */
+      .page-header {
+        margin-bottom: 16px;
+      }
+      .page-title {
+        font-size: 20px;
+      }
+      .page-subtitle {
+        font-size: 12px;
+      }
+
+      /* 卡片内边距收窄 */
+      .card {
+        padding: 16px;
+      }
+
+      /* 上下布局：倒计时在上，时间表在下 */
+      .main-container {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .timeline-panel {
+        flex: none;
+        width: 100%;
+        order: 2;             /* 时间表放到下面 */
+      }
+      .countdown-panel {
+        flex: none;
+        width: 100%;
+        min-width: unset;
+        order: 1;             /* 倒计时放到上面 */
+      }
+
+      /* 倒计时数字适当缩小 */
+      .countdown-number {
+        font-size: 24px;
+      }
+      .countdown-item {
+        min-width: 44px;
+      }
+      .countdown-separator {
+        font-size: 22px;
+        margin-top: 6px;
+      }
+
+      /* 活动行在手机上换行 */
+      .activity-row {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 10px 8px;
+      }
+      .activity-name {
+        flex: 1 1 100%;
+        font-size: 16px;       /* 防止 iOS 缩放 */
+        padding: 10px 12px;
+      }
+      .activity-time {
+        width: 78px;
+        font-size: 14px;
+        padding: 10px 8px;
+      }
+      .activity-duration {
+        width: 72px;
+        font-size: 14px;
+        padding: 10px 6px;
+      }
+      .activity-end {
+        font-size: 12px;
+        min-width: auto;
+      }
+      .btn-delete {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+        border-radius: 50%;
+      }
+
+      /* 按钮区 */
+      .timeline-actions {
+        justify-content: stretch;
+        gap: 10px;
+      }
+      .timeline-actions .btn {
+        flex: 1;
+        padding: 13px 0;
+        font-size: 15px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast 提示容器 -->
+  <div class="toast" id="toast"></div>
+
+  <!-- 页面标题 -->
+  <header class="page-header">
+    <h1 class="page-title">♡ 婚礼当天时间安排表 ♡</h1>
+    <p class="page-subtitle">2026年10月2日 · 中午12:00</p>
+  </header>
+
+  <!-- 主内容区：双栏 -->
+  <main class="main-container">
+
+    <!-- ========== 左侧：时间表 ========== -->
+    <section class="timeline-panel card">
+      <h2 class="card-header">📋 时间安排</h2>
+
+      <!-- 活动列表（JS 动态渲染） -->
+      <div class="activity-list" id="activityList"></div>
+
+      <!-- 底部按钮（编辑模式下可见） -->
+      <div class="timeline-actions" id="timelineActions">
+        <button class="btn btn-add" id="btnAdd">＋ 添加活动</button>
+        <button class="btn btn-save" id="btnSave">💾 保存</button>
+        <button class="btn btn-reset" id="btnReset" title="恢复为预设活动">↺ 恢复默认</button>
+      </div>
+
+      <!-- 锁定 / 解锁 -->
+      <div class="lock-bar">
+        <button class="btn-lock lock-icon" id="btnLock">查看模式</button>
+        <p class="view-notice" id="viewNotice"></p>
+      </div>
+    </section>
+
+    <!-- ========== 右侧：倒计时卡片 ========== -->
+    <aside class="countdown-panel">
+      <div class="card countdown-card">
+        <p class="countdown-title">💍 距离婚礼还有</p>
+        <div class="countdown-digits" id="countdownDigits">
+          <div class="countdown-item">
+            <span class="countdown-number" id="cdDays">--</span>
+            <span class="countdown-label">天</span>
+          </div>
+          <span class="countdown-separator">:</span>
+          <div class="countdown-item">
+            <span class="countdown-number" id="cdHours">--</span>
+            <span class="countdown-label">时</span>
+          </div>
+          <span class="countdown-separator">:</span>
+          <div class="countdown-item">
+            <span class="countdown-number" id="cdMinutes">--</span>
+            <span class="countdown-label">分</span>
+          </div>
+          <span class="countdown-separator">:</span>
+          <div class="countdown-item">
+            <span class="countdown-number" id="cdSeconds">--</span>
+            <span class="countdown-label">秒</span>
+          </div>
+        </div>
+        <p class="wedding-date-info">🕐 婚礼时间：2026年10月2日 中午12:00</p>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- 密码弹窗（默认隐藏） -->
+  <div class="pw-overlay" id="pwOverlay" style="display:none;">
+    <div class="pw-dialog">
+      <h3 id="pwTitle">请输入密码</h3>
+      <p class="pw-hint" id="pwHint"></p>
+      <input type="password" id="pwInput" placeholder="请输入密码" maxlength="20">
+      <p class="pw-error" id="pwError">密码错误，请重试</p>
+      <div class="pw-actions">
+        <button class="btn-pw-cancel" id="btnPwCancel">取消</button>
+        <button class="btn-pw-confirm" id="btnPwConfirm">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ================================================================
+      P2：时间表核心逻辑
+      - 动态渲染活动列表
+      - 添加 / 删除活动
+      - 按开始时间自动升序排列（"起床"始终第一位）
+      - 结束时间自动计算
+      - 倒计时占位（P3 实现）
+      - 保存按钮占位（P4 实现）
+    ================================================================ */
+
+    // ---------- 全局数据 ----------
+    // 倒计时目标时间（北京时间）
+    var WEDDING_DATE = new Date('2026-10-02T12:00:00+08:00');
+
+    // 活动数据数组（当前仅内存中，P4 接入 localStorage）
+    var activities = [];
+
+    // 预设活动数据
+    var DEFAULT_ACTIVITIES = [
+      { id: 1, name: '起床',    startTime: '06:00', duration: 30 },
+      { id: 2, name: '吃早饭',  startTime: '07:00', duration: 30 },
+      { id: 3, name: '接亲',    startTime: '08:00', duration: 60 },
+      { id: 4, name: '玩游戏',  startTime: '09:30', duration: 30 },
+      { id: 5, name: '回酒店',  startTime: '10:30', duration: 30 }
+    ];
+
+    // 自增 ID 计数器
+    var nextId = 100;
+
+    // ---------- 工具函数 ----------
+
+    /* 将 HH:MM 转为当天的分钟数（例如 "07:30" → 450） */
+    function timeToMinutes(timeStr) {
+      var parts = timeStr.split(':');
+      return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    }
+
+    /* 将分钟数转为 HH:MM（例如 450 → "07:30"） */
+    function minutesToTime(minutes) {
+      var h = Math.floor(minutes / 60);
+      var m = minutes % 60;
+      return (h < 10 ? '0' + h : '' + h) + ':' + (m < 10 ? '0' + m : '' + m);
+    }
+
+    /* 计算结束时间：startTime + duration → "HH:MM" */
+    function calcEndTime(startTime, durationMinutes) {
+      return minutesToTime(timeToMinutes(startTime) + durationMinutes);
+    }
+
+    // ---------- 排序 ----------
+
+    /* 活动排序：起床始终第一，其余按开始时间升序 */
+    function sortActivities(list) {
+      return list.slice().sort(function (a, b) {
+        // 名称为"起床"的始终排最前
+        var aIsWakeup = (a.name === '起床');
+        var bIsWakeup = (b.name === '起床');
+        if (aIsWakeup && !bIsWakeup) return -1;
+        if (!aIsWakeup && bIsWakeup) return 1;
+        // 其余按开始时间升序
+        return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+      });
+    }
+
+    // ---------- 渲染 ----------
+
+    /* 渲染整个活动列表 */
+    function renderActivityList() {
+      var container = document.getElementById('activityList');
+      var sorted = sortActivities(activities);
+
+      var html = '';
+      for (var i = 0; i < sorted.length; i++) {
+        var act = sorted[i];
+        var isWakeup = (act.name === '起床');
+        var rowClass = isWakeup ? 'activity-row wakeup' : 'activity-row';
+        var endTime = calcEndTime(act.startTime, act.duration);
+
+        html += '<div class="' + rowClass + '" data-id="' + act.id + '">'
+              + '<input class="activity-name" type="text" value="' + escAttr(act.name) + '" placeholder="活动名称">'
+              + '<input class="activity-time" type="time" value="' + act.startTime + '">'
+              + '<input class="activity-duration" type="number" value="' + act.duration + '" min="1" max="480" step="5">'
+              + '<span class="duration-unit">分钟</span>'
+              + '<span class="activity-end">→ ' + endTime + '</span>'
+              + '<button class="btn-delete" title="删除">×</button>'
+              + '</div>';
+      }
+      container.innerHTML = html;
+
+      // 绑定每行的事件
+      bindRowEvents();
+
+      // 检测时间冲突并标记
+      markTimeConflicts();
+    }
+
+    /* HTML 属性转义（防 XSS） */
+    function escAttr(str) {
+      return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ---------- 行事件绑定 ----------
+
+    /* 给每一行动态绑定事件：修改时间/时长 → 更新结束时间 + 排序；
+       修改名称 → 可能需要重新排序（"起床" 特殊规则）；
+       删除按钮 → 删除该行 */
+    function bindRowEvents() {
+      var rows = document.querySelectorAll('#activityList .activity-row');
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+
+        // 时间选择器变化 → 更新结束时间 + 重新排序
+        var timeInput = row.querySelector('.activity-time');
+        timeInput.addEventListener('change', function () {
+          updateRowEndTime(this.closest('.activity-row'));
+          syncDOMtoArray();
+          renderActivityList();
+        });
+
+        // 时长变化 → 更新结束时间
+        var durationInput = row.querySelector('.activity-duration');
+        durationInput.addEventListener('input', function () {
+          updateRowEndTime(this.closest('.activity-row'));
+          syncDOMtoArray();
+        });
+
+        // 名称变化 → 可能需要重新排序（如果改名为"起床"或从"起床"改为别的）
+        var nameInput = row.querySelector('.activity-name');
+        nameInput.addEventListener('input', function () {
+          var oldName = getActivityById(getRowId(this.closest('.activity-row'))).name;
+          var newName = this.value.trim();
+          syncDOMtoArray();
+          // 仅当涉及"起床"时重新排序
+          if (oldName === '起床' || newName === '起床') {
+            renderActivityList();
+          }
+        });
+
+        // 删除按钮
+        var delBtn = row.querySelector('.btn-delete');
+        delBtn.addEventListener('click', function () {
+          var rowEl = this.closest('.activity-row');
+          var id = getRowId(rowEl);
+          deleteActivity(id);
+        });
+      }
+    }
+
+    /* 获取行上的 data-id */
+    function getRowId(row) {
+      return parseInt(row.getAttribute('data-id'), 10);
+    }
+
+    /* 根据 ID 查找活动对象 */
+    function getActivityById(id) {
+      for (var i = 0; i < activities.length; i++) {
+        if (activities[i].id === id) return activities[i];
+      }
+      return null;
+    }
+
+    /* 更新单行的结束时间显示 */
+    function updateRowEndTime(row) {
+      var timeInput = row.querySelector('.activity-time');
+      var durationInput = row.querySelector('.activity-duration');
+      var endSpan = row.querySelector('.activity-end');
+      var startTime = timeInput.value;
+      var duration = parseInt(durationInput.value, 10);
+      if (isNaN(duration) || duration < 1) duration = 30;
+      endSpan.textContent = '→ ' + calcEndTime(startTime, duration);
+    }
+
+    // ---------- 数据同步 ----------
+
+    /* 将 DOM 中的当前数据同步到 activities 数组 */
+    function syncDOMtoArray() {
+      var rows = document.querySelectorAll('#activityList .activity-row');
+      var newActivities = [];
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var nameInput = row.querySelector('.activity-name');
+        var timeInput = row.querySelector('.activity-time');
+        var durationInput = row.querySelector('.activity-duration');
+        var dur = parseInt(durationInput.value, 10);
+        // 兜底保护：如果输入无效或小于 1，默认为 30 分钟
+        if (isNaN(dur) || dur < 1) dur = 30;
+        if (dur > 480) dur = 480; // 最长 8 小时
+        newActivities.push({
+          id: getRowId(row),
+          name: nameInput.value.trim() || '',
+          startTime: timeInput.value,
+          duration: dur
+        });
+      }
+      activities = newActivities;
+    }
+
+    // ---------- 添加活动 ----------
+
+    /* 添加一个新活动，默认时间为已有活动中最晚结束时间 + 10分钟间隔 */
+    function addActivity() {
+      syncDOMtoArray();
+
+      // 计算已有活动的最晚结束时间
+      var latestEnd = 6 * 60; // 默认早上6点
+      for (var i = 0; i < activities.length; i++) {
+        var end = timeToMinutes(activities[i].startTime) + activities[i].duration;
+        if (end > latestEnd) latestEnd = end;
+      }
+
+      // 新活动默认开始时间 = 最晚结束时间 + 10分钟间隔
+      var defaultStart = minutesToTime(latestEnd + 10);
+      var newAct = {
+        id: nextId++,
+        name: '',
+        startTime: defaultStart,
+        duration: 30
+      };
+      activities.push(newAct);
+
+      renderActivityList();
+
+      // 给新行添加入场动画
+      var newRow = document.querySelector('#activityList .activity-row[data-id="' + newAct.id + '"]');
+      if (newRow) {
+        newRow.classList.add('anim-slide-in');
+        newRow.addEventListener('animationend', function () {
+          newRow.classList.remove('anim-slide-in');
+        }, { once: true });
+
+        var nameInput = newRow.querySelector('.activity-name');
+        nameInput.focus();
+        showToast('已添加新活动，请输入名称');
+      }
+    }
+
+    // ---------- 删除活动 ----------
+
+    /* 删除指定 ID 的活动，至少保留 1 行 */
+    function deleteActivity(id) {
+      if (activities.length <= 1) {
+        showToast('至少保留一个活动');
+        return;
+      }
+      // 起床不可删除
+      var target = getActivityById(id);
+      if (target && target.name === '起床') {
+        showToast('"起床"是婚礼的起点，不能删除哦');
+        return;
+      }
+
+      // 从 DOM 中移除行（带动画）
+      var row = document.querySelector('#activityList .activity-row[data-id="' + id + '"]');
+      if (row) {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(-10px)';
+        row.style.transition = 'opacity 0.2s, transform 0.2s';
+        setTimeout(function () {
+          syncDOMtoArray();
+          activities = activities.filter(function (a) { return a.id !== id; });
+          renderActivityList();
+        }, 200);
+      }
+    }
+
+    // ---------- 时间冲突检测 ----------
+
+    /* 检测相邻活动的时间是否重叠，标记冲突行 */
+    function markTimeConflicts() {
+      var rows = document.querySelectorAll('#activityList .activity-row');
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].classList.remove('conflict');
+      }
+      // 获取排序后的活动数据
+      var sorted = sortActivities(activities);
+      for (var i = 0; i < sorted.length - 1; i++) {
+        var currentEnd = timeToMinutes(sorted[i].startTime) + sorted[i].duration;
+        var nextStart = timeToMinutes(sorted[i + 1].startTime);
+        // 如果当前活动的结束时间晚于下一个活动的开始时间，标记冲突
+        if (currentEnd > nextStart) {
+          var rowA = document.querySelector('#activityList .activity-row[data-id="' + sorted[i].id + '"]');
+          var rowB = document.querySelector('#activityList .activity-row[data-id="' + sorted[i + 1].id + '"]');
+          if (rowA) rowA.classList.add('conflict');
+          if (rowB) rowB.classList.add('conflict');
+        }
+      }
+    }
+
+    // ---------- 恢复默认 ----------
+
+    /* 恢复为预设的 5 项活动，清除已保存数据 */
+    function resetToDefaults() {
+      activities = DEFAULT_ACTIVITIES.slice();
+      activities = sortActivities(activities);
+      localStorage.removeItem(STORAGE_KEY);
+      // 同时更新云端
+      if (CLOUD_ENABLED) {
+        var token = getToken();
+        if (token) {
+          saveToCloud(activities, token, function () {
+            renderActivityList();
+            showToast('↺ 已恢复为默认活动列表（云端已同步）');
+          }, function () {
+            renderActivityList();
+            showToast('↺ 已恢复为默认活动列表');
+          });
+        } else {
+          renderActivityList();
+          showToast('↺ 已恢复为默认活动列表');
+        }
+      } else {
+        renderActivityList();
+        showToast('↺ 已恢复为默认活动列表');
+      }
+    }
+
+    // ---------- 倒计时（P3）----------
+
+    var countdownTimer = null;
+
+    /* 个位数补零 */
+    function padZero(n) {
+      return n < 10 ? '0' + n : '' + n;
+    }
+
+    /* 更新倒计时显示 */
+    function updateCountdown() {
+      var now = new Date();
+      var diff = WEDDING_DATE.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        // 婚礼时间已到或已过
+        document.getElementById('cdDays').textContent = '0';
+        document.getElementById('cdHours').textContent = '00';
+        document.getElementById('cdMinutes').textContent = '00';
+        document.getElementById('cdSeconds').textContent = '00';
+        if (countdownTimer) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+        }
+        return;
+      }
+
+      // 计算天、时、分、秒
+      var totalSeconds = Math.floor(diff / 1000);
+      var days = Math.floor(totalSeconds / 86400);
+      var hours = Math.floor((totalSeconds % 86400) / 3600);
+      var minutes = Math.floor((totalSeconds % 3600) / 60);
+      var seconds = totalSeconds % 60;
+
+      document.getElementById('cdDays').textContent = days;
+      document.getElementById('cdHours').textContent = padZero(hours);
+      document.getElementById('cdMinutes').textContent = padZero(minutes);
+      document.getElementById('cdSeconds').textContent = padZero(seconds);
+
+      // 秒数变化时给秒数字一个微小的脉冲效果
+      var secEl = document.getElementById('cdSeconds');
+      secEl.classList.add('pulse');
+      setTimeout(function () { secEl.classList.remove('pulse'); }, 150);
+    }
+
+    /* 启动倒计时：立即更新一次，然后每秒更新 */
+    function startCountdown() {
+      updateCountdown();
+      countdownTimer = setInterval(updateCountdown, 1000);
+    }
+
+    // ---------- 保存与加载（云端优先 + 本地兜底）----------
+
+    var STORAGE_KEY = 'wedding_timeline_activities';
+
+    // ---------- GitHub API 云端读写 ----------
+
+    var STORAGE_KEY = 'wedding_timeline_activities';
+    var TOKEN_KEY = 'github_token';
+
+    /* 获取 GitHub Token（存在 localStorage 中，不会分享出去） */
+    function getToken() {
+      return localStorage.getItem(TOKEN_KEY);
+    }
+
+    /* 保存 Token */
+    function setToken(token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    }
+
+    /* 提示用户输入 Token */
+    function promptForToken(callback) {
+      var token = prompt(
+        '🔑 首次云端保存需要 GitHub Token\n\n' +
+        '获取方法：\n' +
+        '1. 打开 github.com → 头像 → Settings\n' +
+        '2. 左侧 Developer settings → Personal access tokens → Tokens (classic)\n' +
+        '3. Generate new token → 勾选 repo 权限 → 生成\n' +
+        '4. 复制生成的 token，粘贴到这里\n\n' +
+        '（Token 只存在你的浏览器里，不会分享给亲友）\n\n' +
+        '请输入 Token：'
+      );
+      if (token && token.trim()) {
+        setToken(token.trim());
+        callback(token.trim());
+      } else {
+        callback(null);
+      }
+    }
+
+    /* 从 GitHub 读取 data.json */
+    function loadFromCloud(callback) {
+      var url = getRawUrl();
+      fetch(url)
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          if (Array.isArray(data) && data.length > 0) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+            callback(data);
+          } else {
+            callback(null);
+          }
+        })
+        .catch(function (err) {
+          console.warn('GitHub load error:', err);
+          callback(null);
+        });
+    }
+
+    /* 保存到 GitHub（需要 Token） */
+    function saveToCloud(data, token, onSuccess, onError) {
+      var apiUrl = getApiUrl();
+      var content = JSON.stringify(data, null, 2);
+
+      // 先用 GET 获取当前文件的 SHA（GitHub API 更新文件需要 SHA）
+      fetch(apiUrl, {
+        headers: {
+          'Authorization': 'token ' + token,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (fileInfo) {
+        // 有 SHA，更新文件
+        return fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'token ' + token,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: '更新婚礼时间表',
+            content: btoa(unescape(encodeURIComponent(content))),
+            sha: fileInfo.sha
+          })
+        });
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (onSuccess) onSuccess();
+      })
+      .catch(function (err) {
+        console.error('GitHub save error:', err);
+        if (onError) onError(err);
+      });
+    }
+
+    // ---------- 保存与加载（云端优先 + 本地兜底）----------
+
+    /* 保存：同时写云端和本地 */
+    function saveActivities() {
+      syncDOMtoArray();
+      var data = JSON.stringify(activities);
+
+      // 始终保存到本地（离线兜底）
+      try { localStorage.setItem(STORAGE_KEY, data); } catch (e) {}
+
+      // 云端保存
+      if (CLOUD_ENABLED) {
+        var token = getToken();
+        if (!token) {
+          promptForToken(function (t) {
+            if (t) {
+              saveToCloud(activities, t, function () {
+                showToast('✅ 已保存到云端，亲友打开网页即可看到更新');
+              }, function () {
+                showToast('⚠️ 云端保存失败，已保存到本地');
+              });
+            } else {
+              showToast('⚠️ 未设置 Token，仅保存到本地');
+            }
+          });
+        } else {
+          saveToCloud(activities, token, function () {
+            showToast('✅ 已保存到云端，亲友打开网页即可看到更新');
+          }, function () {
+            showToast('⚠️ 云端保存失败，已保存到本地');
+          });
+        }
+      } else {
+        showToast('✅ 已保存到本地');
+      }
+    }
+
+    /* 加载：优先云端，失败回退本地 */
+    function loadActivities(callback) {
+      if (CLOUD_ENABLED) {
+        loadFromCloud(function (data) {
+          if (data) {
+            callback(data);
+          } else {
+            callback(loadFromLocal());
+          }
+        });
+      } else {
+        callback(loadFromLocal());
+      }
+    }
+
+    /* 从 localStorage 读取 */
+    function loadFromLocal() {
+      try {
+        var data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          var parsed = JSON.parse(data);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    // ---------- Toast 提示 ----------
+
+    function showToast(message) {
+      var toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(function () {
+        toast.classList.remove('show');
+      }, 1800);
+    }
+
+    // ---------- 密码保护与模式切换 ----------
+
+    var PASSWORD_KEY = 'wedding_editor_password';
+    var currentMode = 'view';   // 'view' | 'edit'
+
+    /* 获取已保存的密码 */
+    function getSavedPassword() {
+      return localStorage.getItem(PASSWORD_KEY);
+    }
+
+    /* 切换到编辑模式 */
+    function enterEditMode() {
+      currentMode = 'edit';
+      document.body.classList.remove('view-mode');
+      document.body.classList.add('edit-mode');
+      document.getElementById('btnLock').textContent = '锁定编辑';
+      document.getElementById('viewNotice').textContent = '';
+      // 使输入框可交互
+      setInputsReadonly(false);
+    }
+
+    /* 切换到查看模式 */
+    function enterViewMode() {
+      currentMode = 'view';
+      document.body.classList.remove('edit-mode');
+      document.body.classList.add('view-mode');
+      document.getElementById('btnLock').textContent = '解锁编辑';
+      document.getElementById('viewNotice').textContent = '🔒 只读模式 · 点击下方按钮解锁编辑';
+      // 使输入框只读
+      setInputsReadonly(true);
+    }
+
+    /* 设置所有输入框的只读状态 */
+    function setInputsReadonly(readonly) {
+      var nameInputs = document.querySelectorAll('#activityList .activity-name');
+      var timeInputs = document.querySelectorAll('#activityList .activity-time');
+      var durInputs  = document.querySelectorAll('#activityList .activity-duration');
+      for (var i = 0; i < nameInputs.length; i++) {
+        nameInputs[i].readOnly = readonly;
+      }
+      for (var i = 0; i < timeInputs.length; i++) {
+        timeInputs[i].readOnly = readonly;
+      }
+      for (var i = 0; i < durInputs.length; i++) {
+        durInputs[i].readOnly = readonly;
+      }
+    }
+
+    /* 显示密码弹窗 */
+    function showPasswordDialog(isFirstTime) {
+      var overlay = document.getElementById('pwOverlay');
+      var title = document.getElementById('pwTitle');
+      var hint = document.getElementById('pwHint');
+      var input = document.getElementById('pwInput');
+      var error = document.getElementById('pwError');
+
+      error.style.display = 'none';
+      input.value = '';
+
+      if (isFirstTime) {
+        title.textContent = '首次使用 · 设置密码';
+        hint.textContent = '请设置一个密码，将来用它解锁编辑';
+        input.placeholder = '请设置密码（至少4位）';
+      } else {
+        title.textContent = '请输入密码';
+        hint.textContent = '输入密码后可编辑时间表';
+        input.placeholder = '请输入密码';
+      }
+
+      overlay.style.display = 'flex';
+      setTimeout(function () { input.focus(); }, 100);
+    }
+
+    /* 隐藏密码弹窗 */
+    function hidePasswordDialog() {
+      document.getElementById('pwOverlay').style.display = 'none';
+    }
+
+    /* 处理密码确认 */
+    function handlePasswordConfirm() {
+      var input = document.getElementById('pwInput');
+      var error = document.getElementById('pwError');
+      var password = input.value.trim();
+      var savedPassword = getSavedPassword();
+
+      // 首次设置密码
+      if (!savedPassword) {
+        if (password.length < 4) {
+          error.textContent = '密码至少需要4位';
+          error.style.display = 'block';
+          return;
+        }
+        localStorage.setItem(PASSWORD_KEY, password);
+        hidePasswordDialog();
+        enterEditMode();
+        showToast('🔑 密码已设置！编辑完成后记得锁定');
+        return;
+      }
+
+      // 验证密码
+      if (password === savedPassword) {
+        hidePasswordDialog();
+        enterEditMode();
+        showToast('🔓 已解锁，现在可以编辑了');
+      } else {
+        error.textContent = '密码错误，请重试';
+        error.style.display = 'block';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    // ---------- 初始化 ----------
+
+    function init() {
+      // 异步加载活动数据（优先云端，回退本地）
+      loadActivities(function (saved) {
+        if (saved) {
+          activities = saved;
+        } else {
+          activities = DEFAULT_ACTIVITIES.slice();
+        }
+        activities = sortActivities(activities);
+
+        // 渲染列表
+        renderActivityList();
+      });
+
+      // 启动倒计时（不依赖数据加载）
+      startCountdown();
+
+      // 默认以查看模式启动（分享友好）
+      enterViewMode();
+
+      // 添加按钮事件
+      document.getElementById('btnAdd').addEventListener('click', addActivity);
+
+      // 保存按钮
+      document.getElementById('btnSave').addEventListener('click', saveActivities);
+
+      // 恢复默认按钮
+      document.getElementById('btnReset').addEventListener('click', function () {
+        if (confirm('确定要恢复为默认活动列表吗？当前未保存的修改将丢失。')) {
+          resetToDefaults();
+        }
+      });
+
+      // 锁定/解锁按钮
+      document.getElementById('btnLock').addEventListener('click', function () {
+        if (currentMode === 'edit') {
+          // 锁定：回到查看模式
+          syncDOMtoArray();
+          enterViewMode();
+          showToast('🔒 已锁定，现在只能查看');
+        } else {
+          // 解锁：弹出密码框
+          var hasPassword = !!getSavedPassword();
+          showPasswordDialog(!hasPassword);
+        }
+      });
+
+      // 密码弹窗按钮事件
+      document.getElementById('btnPwConfirm').addEventListener('click', handlePasswordConfirm);
+      document.getElementById('btnPwCancel').addEventListener('click', hidePasswordDialog);
+
+      // 密码输入框回车确认
+      document.getElementById('pwInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') handlePasswordConfirm();
+      });
+
+      // 点击弹窗遮罩关闭
+      document.getElementById('pwOverlay').addEventListener('click', function (e) {
+        if (e.target === this) hidePasswordDialog();
+      });
+    }
+
+    // 页面加载完成后初始化
+    init();
+  </script>
+
+</body>
+</html>

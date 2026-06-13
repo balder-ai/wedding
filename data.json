@@ -9,13 +9,13 @@
     "id": 2,
     "name": "吃早饭",
     "startTime": "07:00",
-    "duration": 30
+    "duration": 31
   },
   {
     "id": 3,
     "name": "接亲",
     "startTime": "08:00",
-    "duration": 61
+    "duration": 60
   },
   {
     "id": 4,

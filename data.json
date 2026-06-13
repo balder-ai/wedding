@@ -1,7 +1,32 @@
 [
-  { "id": 1, "name": "起床",   "startTime": "06:00", "duration": 30 },
-  { "id": 2, "name": "吃早饭", "startTime": "07:00", "duration": 30 },
-  { "id": 3, "name": "接亲",   "startTime": "08:00", "duration": 60 },
-  { "id": 4, "name": "玩游戏", "startTime": "09:30", "duration": 30 },
-  { "id": 5, "name": "回酒店", "startTime": "10:30", "duration": 30 }
+  {
+    "id": 1,
+    "name": "起床",
+    "startTime": "06:00",
+    "duration": 30
+  },
+  {
+    "id": 2,
+    "name": "吃早饭",
+    "startTime": "07:00",
+    "duration": 30
+  },
+  {
+    "id": 3,
+    "name": "接亲",
+    "startTime": "08:00",
+    "duration": 61
+  },
+  {
+    "id": 4,
+    "name": "玩游戏",
+    "startTime": "09:30",
+    "duration": 30
+  },
+  {
+    "id": 5,
+    "name": "回酒店",
+    "startTime": "10:30",
+    "duration": 30
+  }
 ]

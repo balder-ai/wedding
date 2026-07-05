@@ -41,8 +41,8 @@
 
     /* ===== 页面整体 ===== */
     body {
-      font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
-      background-color: #F0F6FC;
+      font-family: "KaiTi", "STKaiti", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #FDF2F8 0%, #F0F4FF 50%, #FFF5F5 100%);
       color: #333333;
       min-height: 100vh;
       padding: 24px;
@@ -54,15 +54,15 @@
       margin-bottom: 32px;
     }
     .page-title {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: bold;
-      color: #1565C0;
-      letter-spacing: 2px;
+      color: #8B5CF6;
+      letter-spacing: 3px;
     }
     .page-subtitle {
-      font-size: 13px;
-      color: #888888;
-      margin-top: 4px;
+      font-size: 14px;
+      color: #A78BCC;
+      margin-top: 6px;
     }
 
     /* ===== 主容器：双栏布局 ===== */
@@ -77,8 +77,8 @@
     /* ===== 卡片通用样式 ===== */
     .card {
       background: #FFFFFF;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(180, 160, 200, 0.10);
       padding: 24px;
     }
 
@@ -90,10 +90,10 @@
     .timeline-panel .card-header {
       font-size: 18px;
       font-weight: bold;
-      color: #1565C0;
+      color: #7B3F9E;
       margin-bottom: 16px;
       padding-bottom: 12px;
-      border-bottom: 2px solid #E0E8F0;
+      border-bottom: 2px solid #F0E8F5;
     }
 
     /* 活动列表容器 */
@@ -110,17 +110,18 @@
       gap: 10px;
       padding: 10px 14px;
       background: #FAFBFC;
-      border: 1px solid #E0E8F0;
-      border-radius: 8px;
-      transition: background 0.2s;
+      border: 1.5px solid #E8E0F0;
+      border-radius: 14px;
+      transition: background 0.2s, border-color 0.2s;
     }
     .activity-row:hover {
-      background: #F0F6FC;
+      background: #F5F0FF;
+      border-color: #D5C8E8;
     }
     /* 起床行高亮 */
     .activity-row.wakeup {
-      background: #FFF8E1;
-      border-color: #FFE082;
+      background: #FFFBF0;
+      border-color: #FFE4B5;
     }
 
     /* 活动名称输入框 */
@@ -128,8 +129,8 @@
       flex: 3;
       min-width: 80px;
       padding: 8px 12px;
-      border: 1px solid #E0E8F0;
-      border-radius: 6px;
+      border: 1.5px solid #E0E8F0;
+      border-radius: 10px;
       font-size: 15px;
       font-family: inherit;
       color: #333;
@@ -138,7 +139,7 @@
       transition: border-color 0.2s;
     }
     .activity-name:focus {
-      border-color: #1976D2;
+      border-color: #8B5CF6;
     }
     .activity-name::placeholder {
       color: #bbb;
@@ -148,8 +149,8 @@
     .activity-time {
       width: 90px;
       padding: 8px 10px;
-      border: 1px solid #E0E8F0;
-      border-radius: 6px;
+      border: 1.5px solid #E0E8F0;
+      border-radius: 10px;
       font-size: 14px;
       font-family: inherit;
       color: #333;
@@ -159,42 +160,54 @@
       transition: border-color 0.2s;
     }
     .activity-time:focus {
-      border-color: #1976D2;
+      border-color: #8B5CF6;
     }
 
-    /* 持续时长输入框 */
+    /* 持续时长：数字 + 分钟 一体 */
+    .duration-box {
+      display: inline-flex;
+      align-items: center;
+      border: 1.5px solid #E0E8F0;
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .duration-box:focus-within {
+      border-color: #1976D2;
+    }
     .activity-duration {
-      width: 80px;
-      padding: 8px 10px;
-      border: 1px solid #E0E8F0;
-      border-radius: 6px;
+      width: 56px;
+      padding: 8px 4px 8px 10px;
+      border: none;
+      border-radius: 0;
       font-size: 14px;
       font-family: inherit;
       color: #333;
-      background: #fff;
+      background: transparent;
       outline: none;
       text-align: center;
-      transition: border-color 0.2s;
     }
-    .activity-duration:focus {
-      border-color: #1976D2;
-    }
-    /* 时长单位标签 */
     .duration-unit {
+      padding: 8px 10px 8px 2px;
       font-size: 13px;
       color: #888;
-      margin-left: -4px;
-      margin-right: 4px;
       user-select: none;
+      background: #F5F5FF;
+      white-space: nowrap;
     }
 
     /* 结束时间显示 */
     .activity-end {
       font-size: 13px;
-      color: #888888;
+      color: #7B5B8C;
       white-space: nowrap;
-      min-width: 55px;
+      min-width: 60px;
       text-align: center;
+      background: #FFF5FA;
+      border: 1.5px solid #F0D5E8;
+      border-radius: 10px;
+      padding: 4px 8px;
     }
 
     /* 删除按钮 */
@@ -225,8 +238,8 @@
     .btn-lock-row {
       width: 30px;
       height: 30px;
-      border: 1px solid #E0E8F0;
-      border-radius: 50%;
+      border: 1.5px solid #E8E0F0;
+      border-radius: 10px;
       background: #fff;
       font-size: 14px;
       cursor: pointer;
@@ -237,12 +250,12 @@
       flex-shrink: 0;
     }
     .btn-lock-row:hover {
-      background: #FFF8E1;
-      border-color: #FFCC80;
+      background: #FFF5FA;
+      border-color: #F0D5E8;
     }
     .btn-lock-row.locked {
-      background: #FFF3E0;
-      border-color: #FF9800;
+      background: #FFF0F5;
+      border-color: #F472B6;
     }
 
     /* 底部按钮区域 */
@@ -254,7 +267,7 @@
     .btn {
       padding: 10px 20px;
       border: none;
-      border-radius: 6px;
+      border-radius: 12px;
       font-size: 14px;
       font-family: inherit;
       font-weight: 500;
@@ -265,18 +278,29 @@
       transform: scale(0.96);
     }
     .btn-add {
-      background: #1976D2;
+      background: #8B5CF6;
       color: #fff;
     }
     .btn-add:hover {
-      background: #1565C0;
+      background: #7C3FED;
     }
     .btn-save {
-      background: #43A047;
+      background: #F472B6;
       color: #fff;
     }
     .btn-save:hover {
-      background: #388E3C;
+      background: #EC4899;
+    }
+    .btn-reset {
+      background: #fff;
+      color: #A78BCC;
+      border: 1.5px solid #E8E0F0;
+      margin-left: auto;
+    }
+    .btn-reset:hover {
+      background: #FFF5FA;
+      color: #9B59B6;
+      border-color: #F0D5E8;
     }
     .btn-reset {
       background: #fff;
@@ -329,13 +353,13 @@
       min-width: 280px;
     }
     .countdown-card {
-      background: #E3F2FD;
-      border: 2px solid #BBDEFB;
+      background: linear-gradient(135deg, #FDF2F8, #F0F0FF);
+      border: 2px solid #E8D5F0;
       text-align: center;
     }
     .countdown-title {
       font-size: 16px;
-      color: #1565C0;
+      color: #8B5CF6;
       margin-bottom: 16px;
       font-weight: 500;
     }
@@ -354,18 +378,18 @@
     .countdown-number {
       font-size: 32px;
       font-weight: bold;
-      color: #0D47A1;
+      color: #7B3F9E;
       font-family: "SF Mono", "Consolas", "Menlo", monospace;
       line-height: 1.2;
     }
     .countdown-label {
       font-size: 12px;
-      color: #888888;
+      color: #A78BCC;
       margin-top: 2px;
     }
     .countdown-separator {
       font-size: 28px;
-      color: #1565C0;
+      color: #C4A6E0;
       font-weight: bold;
       align-self: flex-start;
       margin-top: 8px;
@@ -384,10 +408,10 @@
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: #43A047;
+      background: #8B5CF6;
       color: #fff;
       padding: 10px 24px;
-      border-radius: 8px;
+      border-radius: 14px;
       font-size: 14px;
       font-family: inherit;
       z-index: 999;
@@ -616,10 +640,16 @@
         font-size: 14px;
         padding: 10px 8px;
       }
+      .duration-box {
+        border-radius: 10px;
+      }
       .activity-duration {
-        width: 72px;
+        width: 50px;
         font-size: 14px;
-        padding: 10px 6px;
+        padding: 10px 2px 10px 8px;
+      }
+      .duration-unit {
+        padding: 10px 8px 10px 2px;
       }
       .activity-end {
         font-size: 12px;
@@ -810,8 +840,9 @@
         html += '<div class="' + rowClass + '" data-id="' + act.id + '">'
               + '<input class="activity-name" type="text" value="' + escAttr(act.name) + '" placeholder="活动名称">'
               + '<input class="activity-time" type="time" value="' + act.startTime + '">'
+              + '<span class="duration-box">'
               + '<input class="activity-duration" type="number" value="' + act.duration + '" min="1" max="480" step="5">'
-              + '<span class="duration-unit">分钟</span>'
+              + '<span class="duration-unit">分钟</span></span>'
               + '<span class="activity-end">→ ' + endTime + '</span>'
               + '<button class="btn-lock-row' + (act.locked ? ' locked' : '') + '" title="锁定时间">' + lockIcon + '</button>'
               + '<button class="btn-delete" title="删除">×</button>'
@@ -852,7 +883,8 @@
 
         // 时长变化 → 更新结束时间 + 自动衔接
         var durationInput = row.querySelector('.activity-duration');
-        durationInput.addEventListener('input', function () {
+        // 使用 change 而非 input：等用户输完再触发，避免输入两位数时被打断
+        durationInput.addEventListener('change', function () {
           var rowEl = this.closest('.activity-row');
           var id = getRowId(rowEl);
           // 记录旧时长（syncDOMtoArray 之前，activities 还是旧值）

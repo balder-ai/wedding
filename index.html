@@ -854,9 +854,14 @@
         var durationInput = row.querySelector('.activity-duration');
         durationInput.addEventListener('input', function () {
           var rowEl = this.closest('.activity-row');
+          var id = getRowId(rowEl);
+          // 记录旧时长（syncDOMtoArray 之前，activities 还是旧值）
+          var oldAct = getActivityById(id);
+          var oldDur = oldAct ? oldAct.duration : parseInt(this.value, 10);
+
           updateRowEndTime(rowEl);
           syncDOMtoArray();
-          autoAdjustTimeline(getRowId(rowEl));
+          autoAdjustTimeline(id, oldDur);
           renderActivityList();
         });
 
@@ -1042,15 +1047,6 @@
       showToast(act.locked ? '🔒 已锁定，该活动时间不会自动调整' : '🔓 已解锁');
     }
 
-    /* 获取排序后指定活动的前一个活动 */
-    function getPrevActivity(id) {
-      var sorted = sortActivities(activities);
-      for (var i = 0; i < sorted.length; i++) {
-        if (sorted[i].id === id) return (i > 0) ? sorted[i - 1] : null;
-      }
-      return null;
-    }
-
     /* 获取排序后指定活动的后一个活动 */
     function getNextActivity(id) {
       var sorted = sortActivities(activities);
@@ -1072,109 +1068,59 @@
       return result;
     }
 
-    /* 自动衔接时间：时长变化后调整相邻活动 */
-    function autoAdjustTimeline(changedId) {
+    /* 核心：时长变化后自动衔接 */
+    function autoAdjustTimeline(changedId, oldDuration) {
       var changed = getActivityById(changedId);
       if (!changed) return;
 
-      var sorted = sortActivities(activities);
-      var prevAct = getPrevActivity(changedId);
-      var nextAct = getNextActivity(changedId);
+      var delta = changed.duration - oldDuration;
 
-      // ===== 重新衔接开始时间 =====
-      // 未锁定的活动：开始时间 = 上一个活动的结束时间
-      for (var i = 1; i < sorted.length; i++) {
-        var cur = sorted[i];
-        // 起床始终第一位，不调整
-        if (cur.name === '起床') continue;
-        // 锁定的活动不调整
-        if (cur.locked) continue;
-
-        var prev = sorted[i - 1];
-        var prevEnd = timeToMinutes(prev.startTime) + prev.duration;
-        cur.startTime = minutesToTime(prevEnd);
+      // 时长增加了 → 从相邻活动"借"时间
+      if (delta > 0) {
+        _borrowTime(changedId, delta);
       }
-
-      // 重新排序（某些活动可能因时间变化而需要重排）
-      activities = sortActivities(activities);
-
-      // ===== 检测并消化重叠 =====
-      // 如果有活动的时间超过了相邻活动，压缩相邻活动
-      _resolveOverlaps();
-    }
-
-    /* 消化时间重叠：当前活动扩张时压缩相邻活动 */
-    function _resolveOverlaps() {
-      var sorted = sortActivities(activities);
-      for (var i = 0; i < sorted.length; i++) {
-        var cur = sorted[i];
-        if (cur.name === '起床') continue;
-        if (cur.locked) continue;
-
-        var prev = (i > 0) ? sorted[i - 1] : null;
-        var next = (i < sorted.length - 1) ? sorted[i + 1] : null;
-
-        var curStart = timeToMinutes(cur.startTime);
-        var curEnd = curStart + cur.duration;
-
-        // 检查与上一个活动的重叠
-        if (prev && !prev.locked) {
-          var prevEnd = timeToMinutes(prev.startTime) + prev.duration;
-          var overlap = prevEnd - curStart;
-          if (overlap > 0) {
-            // 当前活动开始时间早于上一个结束 → 压缩上一个
-            var newPrevDur = prev.duration - overlap;
-            if (newPrevDur < 1) newPrevDur = 1;
-            prev.duration = newPrevDur;
-          }
-        }
-
-        // 检查与下一个活动的重叠
+      // 时长减少了 → 把多余时间给下一个活动
+      else if (delta < 0) {
+        var next = getNextActivity(changedId);
         if (next && !next.locked) {
-          var nextStart = timeToMinutes(next.startTime);
-          var overlap = curEnd - nextStart;
-          if (overlap > 0) {
-            // 当前活动结束晚于下一个开始 → 压缩下一个的时长并推迟开始时间
-            var newNextDur = next.duration - overlap;
-            if (newNextDur < 1) {
-              // 下一个已到最短，往上继续压缩
-              var remaining = overlap - (next.duration - 1);
-              next.duration = 1;
-              _compressUpward(next.id, remaining);
-            } else {
-              next.duration = newNextDur;
-            }
-            // 重新衔接所有时间
-            _rechainTimes();
-          }
+          next.duration += (-delta);
+        }
+      }
+
+      // 重新衔接所有开始时间
+      _rechainAll();
+    }
+
+    /* 从相邻活动借时间：优先下一个，不够再往前借 */
+    function _borrowTime(startId, amount) {
+      // 优先压缩下一个活动
+      var next = getNextActivity(startId);
+      if (next && !next.locked && next.name !== '起床') {
+        var take = Math.min(amount, next.duration - 1);
+        next.duration -= take;
+        amount -= take;
+      }
+
+      // 还不够 → 往前依次压缩
+      if (amount > 0) {
+        var prevs = getAllPrevActivities(startId);
+        for (var i = 0; i < prevs.length && amount > 0; i++) {
+          var p = prevs[i];
+          if (p.locked || p.name === '起床') continue;
+          var t = Math.min(amount, p.duration - 1);
+          p.duration -= t;
+          amount -= t;
         }
       }
     }
 
-    /* 向上（往前）压缩活动，消化剩余时间 */
-    function _compressUpward(startId, remaining) {
-      if (remaining <= 0) return;
-      var prevs = getAllPrevActivities(startId);
-      for (var i = 0; i < prevs.length && remaining > 0; i++) {
-        var act = prevs[i];
-        if (act.locked) continue;
-        if (act.name === '起床') continue;
-        var canCompress = act.duration - 1; // 至少保留 1 分钟
-        if (canCompress <= 0) continue;
-        var take = Math.min(remaining, canCompress);
-        act.duration -= take;
-        remaining -= take;
-      }
-      _rechainTimes();
-    }
-
-    /* 重新衔接所有未锁定活动的开始时间 */
-    function _rechainTimes() {
+    /* 重新衔接所有未锁定活动的开始时间 = 上一个的结束时间 */
+    function _rechainAll() {
       var sorted = sortActivities(activities);
       for (var i = 1; i < sorted.length; i++) {
         var cur = sorted[i];
-        if (cur.name === '起床') continue;
         if (cur.locked) continue;
+        if (cur.name === '起床') continue;
         var prev = sorted[i - 1];
         var prevEnd = timeToMinutes(prev.startTime) + prev.duration;
         cur.startTime = minutesToTime(prevEnd);

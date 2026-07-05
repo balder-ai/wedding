@@ -23,98 +23,98 @@
   {
     "id": 5,
     "name": "车队出发前往新娘家（小李庄）",
-    "startTime": "05:30",
+    "startTime": "05:00",
     "duration": 45,
     "locked": false
   },
   {
     "id": 100,
     "name": "到达 上楼接亲",
-    "startTime": "06:15",
-    "duration": 30,
+    "startTime": "05:45",
+    "duration": 31,
     "locked": false
   },
   {
     "id": 100,
     "name": "返程西城山水居（南门）",
-    "startTime": "11:50",
-    "duration": 30,
+    "startTime": "06:16",
+    "duration": 29,
     "locked": false
   },
   {
     "id": 101,
     "name": "下车礼仪",
-    "startTime": "12:30",
+    "startTime": "06:45",
     "duration": 30,
     "locked": false
   },
   {
     "id": 102,
     "name": "舅舅主持拜堂仪式",
-    "startTime": "13:10",
+    "startTime": "07:15",
     "duration": 30,
     "locked": false
   },
   {
     "id": 103,
     "name": "舅舅主持敬茶改口仪式",
-    "startTime": "13:50",
+    "startTime": "07:45",
     "duration": 30,
     "locked": false
   },
   {
     "id": 104,
     "name": "进洞房",
-    "startTime": "14:30",
+    "startTime": "08:15",
     "duration": 30,
     "locked": false
   },
   {
     "id": 105,
     "name": "车队出发徽州府酒店",
-    "startTime": "15:10",
+    "startTime": "08:45",
     "duration": 30,
     "locked": false
   },
   {
     "id": 106,
     "name": "到达酒店 换装",
-    "startTime": "15:50",
+    "startTime": "09:15",
     "duration": 30,
     "locked": false
   },
   {
     "id": 107,
     "name": "开始迎宾",
-    "startTime": "16:30",
+    "startTime": "09:45",
     "duration": 30,
     "locked": false
   },
   {
     "id": 108,
     "name": "酒店屏幕播放照片视频",
-    "startTime": "17:10",
+    "startTime": "10:15",
     "duration": 30,
     "locked": false
   },
   {
     "id": 109,
     "name": "暖场表演",
-    "startTime": "17:50",
+    "startTime": "10:45",
     "duration": 30,
     "locked": false
   },
   {
     "id": 110,
     "name": "播放接亲视频",
-    "startTime": "18:30",
+    "startTime": "11:15",
     "duration": 30,
     "locked": false
   },
   {
     "id": 111,
     "name": "仪式开始",
-    "startTime": "19:10",
+    "startTime": "11:45",
     "duration": 30,
     "locked": false
   }

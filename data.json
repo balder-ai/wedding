@@ -3,102 +3,119 @@
     "id": 1,
     "name": "起床洗漱化妆",
     "startTime": "03:00",
-    "duration": 60
+    "duration": 60,
+    "locked": false
   },
   {
     "id": 2,
     "name": "准备早饭 相关人员全部就位",
     "startTime": "04:00",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 4,
     "name": "联系车队摄影接亲人员",
     "startTime": "04:30",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 5,
     "name": "车队出发前往新娘家（小李庄）",
     "startTime": "05:30",
-    "duration": 45
+    "duration": 45,
+    "locked": false
   },
   {
     "id": 100,
     "name": "到达 上楼接亲",
     "startTime": "06:15",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 100,
     "name": "返程西城山水居（南门）",
     "startTime": "11:50",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 101,
     "name": "下车礼仪",
     "startTime": "12:30",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 102,
     "name": "舅舅主持拜堂仪式",
     "startTime": "13:10",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 103,
     "name": "舅舅主持敬茶改口仪式",
     "startTime": "13:50",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 104,
     "name": "进洞房",
     "startTime": "14:30",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 105,
     "name": "车队出发徽州府酒店",
     "startTime": "15:10",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 106,
     "name": "到达酒店 换装",
     "startTime": "15:50",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 107,
     "name": "开始迎宾",
     "startTime": "16:30",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 108,
     "name": "酒店屏幕播放照片视频",
     "startTime": "17:10",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 109,
     "name": "暖场表演",
     "startTime": "17:50",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 110,
     "name": "播放接亲视频",
     "startTime": "18:30",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   },
   {
     "id": 111,
     "name": "仪式开始",
     "startTime": "19:10",
-    "duration": 30
+    "duration": 30,
+    "locked": false
   }
 ]

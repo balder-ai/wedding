@@ -1,38 +1,104 @@
 [
   {
     "id": 1,
-    "name": "起床",
-    "startTime": "06:00",
-    "duration": 30
-  },
-  {
-    "id": 2,
-    "name": "吃早饭",
-    "startTime": "06:30",
-    "duration": 30
-  },
-  {
-    "id": 3,
-    "name": "接亲",
-    "startTime": "08:00",
+    "name": "起床洗漱化妆",
+    "startTime": "03:00",
     "duration": 60
   },
   {
+    "id": 2,
+    "name": "准备早饭 相关人员全部就位",
+    "startTime": "04:00",
+    "duration": 30
+  },
+  {
     "id": 4,
-    "name": "玩游戏",
-    "startTime": "09:30",
+    "name": "联系车队摄影接亲人员",
+    "startTime": "04:30",
     "duration": 30
   },
   {
     "id": 5,
-    "name": "回酒店",
-    "startTime": "10:30",
+    "name": "车队出发前往新娘家（小李庄）",
+    "startTime": "05:30",
+    "duration": 45
+  },
+  {
+    "id": 100,
+    "name": "到达 上楼接亲",
+    "startTime": "06:15",
     "duration": 30
   },
   {
     "id": 100,
-    "name": "到酒店后1",
-    "startTime": "11:10",
+    "name": "返程西城山水居（南门）",
+    "startTime": "11:50",
+    "duration": 30
+  },
+  {
+    "id": 101,
+    "name": "下车礼仪",
+    "startTime": "12:30",
+    "duration": 30
+  },
+  {
+    "id": 102,
+    "name": "舅舅主持拜堂仪式",
+    "startTime": "13:10",
+    "duration": 30
+  },
+  {
+    "id": 103,
+    "name": "舅舅主持敬茶改口仪式",
+    "startTime": "13:50",
+    "duration": 30
+  },
+  {
+    "id": 104,
+    "name": "进洞房",
+    "startTime": "14:30",
+    "duration": 30
+  },
+  {
+    "id": 105,
+    "name": "车队出发徽州府酒店",
+    "startTime": "15:10",
+    "duration": 30
+  },
+  {
+    "id": 106,
+    "name": "到达酒店 换装",
+    "startTime": "15:50",
+    "duration": 30
+  },
+  {
+    "id": 107,
+    "name": "开始迎宾",
+    "startTime": "16:30",
+    "duration": 30
+  },
+  {
+    "id": 108,
+    "name": "酒店屏幕播放照片视频",
+    "startTime": "17:10",
+    "duration": 30
+  },
+  {
+    "id": 109,
+    "name": "暖场表演",
+    "startTime": "17:50",
+    "duration": 30
+  },
+  {
+    "id": 110,
+    "name": "播放接亲视频",
+    "startTime": "18:30",
+    "duration": 30
+  },
+  {
+    "id": 111,
+    "name": "仪式开始",
+    "startTime": "19:10",
     "duration": 30
   }
 ]

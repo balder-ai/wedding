@@ -31,14 +31,14 @@
     "id": 100,
     "name": "到达 上楼接亲",
     "startTime": "05:45",
-    "duration": 31,
+    "duration": 30,
     "locked": false
   },
   {
     "id": 100,
     "name": "返程西城山水居（南门）",
-    "startTime": "06:16",
-    "duration": 29,
+    "startTime": "06:15",
+    "duration": 30,
     "locked": false
   },
   {

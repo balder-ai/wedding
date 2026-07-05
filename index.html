@@ -221,6 +221,30 @@
       transform: scale(0.9);
     }
 
+    /* 行内锁定按钮 */
+    .btn-lock-row {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #E0E8F0;
+      border-radius: 50%;
+      background: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-lock-row:hover {
+      background: #FFF8E1;
+      border-color: #FFCC80;
+    }
+    .btn-lock-row.locked {
+      background: #FFF3E0;
+      border-color: #FF9800;
+    }
+
     /* 底部按钮区域 */
     .timeline-actions {
       display: flex;
@@ -379,8 +403,9 @@
     body.view-mode .timeline-actions {
       display: none;          /* 隐藏编辑按钮 */
     }
-    body.view-mode .btn-delete {
-      display: none;          /* 隐藏删除按钮 */
+    body.view-mode .btn-delete,
+    body.view-mode .btn-lock-row {
+      display: none;          /* 隐藏编辑按钮 */
     }
     body.view-mode .activity-name,
     body.view-mode .activity-time,
@@ -721,11 +746,11 @@
 
     // 预设活动数据
     var DEFAULT_ACTIVITIES = [
-      { id: 1, name: '起床',    startTime: '06:00', duration: 30 },
-      { id: 2, name: '吃早饭',  startTime: '07:00', duration: 30 },
-      { id: 3, name: '接亲',    startTime: '08:00', duration: 60 },
-      { id: 4, name: '玩游戏',  startTime: '09:30', duration: 30 },
-      { id: 5, name: '回酒店',  startTime: '10:30', duration: 30 }
+      { id: 1, name: '起床',    startTime: '06:00', duration: 30, locked: false },
+      { id: 2, name: '吃早饭',  startTime: '06:30', duration: 30, locked: false },
+      { id: 3, name: '接亲',    startTime: '07:00', duration: 60, locked: false },
+      { id: 4, name: '玩游戏',  startTime: '08:00', duration: 30, locked: false },
+      { id: 5, name: '回酒店',  startTime: '08:30', duration: 30, locked: false }
     ];
 
     // 自增 ID 计数器
@@ -780,12 +805,15 @@
         var rowClass = isWakeup ? 'activity-row wakeup' : 'activity-row';
         var endTime = calcEndTime(act.startTime, act.duration);
 
+        var lockIcon = act.locked ? '🔒' : '🔓';
+        var lockClass = act.locked ? 'btn-lock-row locked' : 'btn-lock-row';
         html += '<div class="' + rowClass + '" data-id="' + act.id + '">'
               + '<input class="activity-name" type="text" value="' + escAttr(act.name) + '" placeholder="活动名称">'
               + '<input class="activity-time" type="time" value="' + act.startTime + '">'
               + '<input class="activity-duration" type="number" value="' + act.duration + '" min="1" max="480" step="5">'
               + '<span class="duration-unit">分钟</span>'
               + '<span class="activity-end">→ ' + endTime + '</span>'
+              + '<button class="btn-lock-row' + (act.locked ? ' locked' : '') + '" title="锁定时间">' + lockIcon + '</button>'
               + '<button class="btn-delete" title="删除">×</button>'
               + '</div>';
       }
@@ -822,11 +850,14 @@
           renderActivityList();
         });
 
-        // 时长变化 → 更新结束时间
+        // 时长变化 → 更新结束时间 + 自动衔接
         var durationInput = row.querySelector('.activity-duration');
         durationInput.addEventListener('input', function () {
-          updateRowEndTime(this.closest('.activity-row'));
+          var rowEl = this.closest('.activity-row');
+          updateRowEndTime(rowEl);
           syncDOMtoArray();
+          autoAdjustTimeline(getRowId(rowEl));
+          renderActivityList();
         });
 
         // 名称变化 → 可能需要重新排序（如果改名为"起床"或从"起床"改为别的）
@@ -839,6 +870,13 @@
           if (oldName === '起床' || newName === '起床') {
             renderActivityList();
           }
+        });
+
+        // 锁定按钮
+        var lockBtn = row.querySelector('.btn-lock-row');
+        lockBtn.addEventListener('click', function () {
+          var rowEl = this.closest('.activity-row');
+          toggleLock(getRowId(rowEl));
         });
 
         // 删除按钮
@@ -886,6 +924,7 @@
         var nameInput = row.querySelector('.activity-name');
         var timeInput = row.querySelector('.activity-time');
         var durationInput = row.querySelector('.activity-duration');
+        var lockBtn = row.querySelector('.btn-lock-row');
         var dur = parseInt(durationInput.value, 10);
         // 兜底保护：如果输入无效或小于 1，默认为 30 分钟
         if (isNaN(dur) || dur < 1) dur = 30;
@@ -894,7 +933,8 @@
           id: getRowId(row),
           name: nameInput.value.trim() || '',
           startTime: timeInput.value,
-          duration: dur
+          duration: dur,
+          locked: lockBtn ? lockBtn.classList.contains('locked') : false
         });
       }
       activities = newActivities;
@@ -988,6 +1028,156 @@
           if (rowA) rowA.classList.add('conflict');
           if (rowB) rowB.classList.add('conflict');
         }
+      }
+    }
+
+    // ---------- 自动时间衔接 ----------
+
+    /* 锁定/解锁某行 */
+    function toggleLock(id) {
+      var act = getActivityById(id);
+      if (!act) return;
+      act.locked = !act.locked;
+      renderActivityList();
+      showToast(act.locked ? '🔒 已锁定，该活动时间不会自动调整' : '🔓 已解锁');
+    }
+
+    /* 获取排序后指定活动的前一个活动 */
+    function getPrevActivity(id) {
+      var sorted = sortActivities(activities);
+      for (var i = 0; i < sorted.length; i++) {
+        if (sorted[i].id === id) return (i > 0) ? sorted[i - 1] : null;
+      }
+      return null;
+    }
+
+    /* 获取排序后指定活动的后一个活动 */
+    function getNextActivity(id) {
+      var sorted = sortActivities(activities);
+      for (var i = 0; i < sorted.length; i++) {
+        if (sorted[i].id === id) return (i < sorted.length - 1) ? sorted[i + 1] : null;
+      }
+      return null;
+    }
+
+    /* 获取排序后在指定活动之前的所有活动（从近到远） */
+    function getAllPrevActivities(id) {
+      var sorted = sortActivities(activities);
+      var result = [];
+      var found = false;
+      for (var i = sorted.length - 1; i >= 0; i--) {
+        if (found) result.push(sorted[i]);
+        if (sorted[i].id === id) found = true;
+      }
+      return result;
+    }
+
+    /* 自动衔接时间：时长变化后调整相邻活动 */
+    function autoAdjustTimeline(changedId) {
+      var changed = getActivityById(changedId);
+      if (!changed) return;
+
+      var sorted = sortActivities(activities);
+      var prevAct = getPrevActivity(changedId);
+      var nextAct = getNextActivity(changedId);
+
+      // ===== 重新衔接开始时间 =====
+      // 未锁定的活动：开始时间 = 上一个活动的结束时间
+      for (var i = 1; i < sorted.length; i++) {
+        var cur = sorted[i];
+        // 起床始终第一位，不调整
+        if (cur.name === '起床') continue;
+        // 锁定的活动不调整
+        if (cur.locked) continue;
+
+        var prev = sorted[i - 1];
+        var prevEnd = timeToMinutes(prev.startTime) + prev.duration;
+        cur.startTime = minutesToTime(prevEnd);
+      }
+
+      // 重新排序（某些活动可能因时间变化而需要重排）
+      activities = sortActivities(activities);
+
+      // ===== 检测并消化重叠 =====
+      // 如果有活动的时间超过了相邻活动，压缩相邻活动
+      _resolveOverlaps();
+    }
+
+    /* 消化时间重叠：当前活动扩张时压缩相邻活动 */
+    function _resolveOverlaps() {
+      var sorted = sortActivities(activities);
+      for (var i = 0; i < sorted.length; i++) {
+        var cur = sorted[i];
+        if (cur.name === '起床') continue;
+        if (cur.locked) continue;
+
+        var prev = (i > 0) ? sorted[i - 1] : null;
+        var next = (i < sorted.length - 1) ? sorted[i + 1] : null;
+
+        var curStart = timeToMinutes(cur.startTime);
+        var curEnd = curStart + cur.duration;
+
+        // 检查与上一个活动的重叠
+        if (prev && !prev.locked) {
+          var prevEnd = timeToMinutes(prev.startTime) + prev.duration;
+          var overlap = prevEnd - curStart;
+          if (overlap > 0) {
+            // 当前活动开始时间早于上一个结束 → 压缩上一个
+            var newPrevDur = prev.duration - overlap;
+            if (newPrevDur < 1) newPrevDur = 1;
+            prev.duration = newPrevDur;
+          }
+        }
+
+        // 检查与下一个活动的重叠
+        if (next && !next.locked) {
+          var nextStart = timeToMinutes(next.startTime);
+          var overlap = curEnd - nextStart;
+          if (overlap > 0) {
+            // 当前活动结束晚于下一个开始 → 压缩下一个的时长并推迟开始时间
+            var newNextDur = next.duration - overlap;
+            if (newNextDur < 1) {
+              // 下一个已到最短，往上继续压缩
+              var remaining = overlap - (next.duration - 1);
+              next.duration = 1;
+              _compressUpward(next.id, remaining);
+            } else {
+              next.duration = newNextDur;
+            }
+            // 重新衔接所有时间
+            _rechainTimes();
+          }
+        }
+      }
+    }
+
+    /* 向上（往前）压缩活动，消化剩余时间 */
+    function _compressUpward(startId, remaining) {
+      if (remaining <= 0) return;
+      var prevs = getAllPrevActivities(startId);
+      for (var i = 0; i < prevs.length && remaining > 0; i++) {
+        var act = prevs[i];
+        if (act.locked) continue;
+        if (act.name === '起床') continue;
+        var canCompress = act.duration - 1; // 至少保留 1 分钟
+        if (canCompress <= 0) continue;
+        var take = Math.min(remaining, canCompress);
+        act.duration -= take;
+        remaining -= take;
+      }
+      _rechainTimes();
+    }
+
+    /* 重新衔接所有未锁定活动的开始时间 */
+    function _rechainTimes() {
+      var sorted = sortActivities(activities);
+      for (var i = 1; i < sorted.length; i++) {
+        var cur = sorted[i];
+        if (cur.name === '起床') continue;
+        if (cur.locked) continue;
+        var prev = sorted[i - 1];
+        var prevEnd = timeToMinutes(prev.startTime) + prev.duration;
+        cur.startTime = minutesToTime(prevEnd);
       }
     }
 
@@ -1127,6 +1317,7 @@
           // UTF-8 解码
           var decoded = decodeURIComponent(escape(raw));
           var data = JSON.parse(decoded);
+          data = migrateData(data);
           if (Array.isArray(data) && data.length > 0) {
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
             callback(data);
@@ -1241,11 +1432,21 @@
         if (data) {
           var parsed = JSON.parse(data);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            return migrateData(parsed);
           }
         }
       } catch (e) {}
       return null;
+    }
+
+    /* 为旧数据补上 locked 字段（兼容旧版本） */
+    function migrateData(list) {
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].locked === undefined) {
+          list[i].locked = false;
+        }
+      }
+      return list;
     }
 
     // ---------- Toast 提示 ----------

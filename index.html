@@ -41,7 +41,7 @@
 
     /* ===== 页面整体 ===== */
     body {
-      font-family: "KaiTi", "STKaiti", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
       background: linear-gradient(135deg, #FDF2F8 0%, #F0F4FF 50%, #FFF5F5 100%);
       color: #333333;
       min-height: 100vh;
@@ -112,7 +112,17 @@
       background: #FAFBFC;
       border: 1.5px solid #E8E0F0;
       border-radius: 14px;
+      font-weight: bold;
+      color: #1a1a1a;
       transition: background 0.2s, border-color 0.2s;
+    }
+    .activity-row input,
+    .activity-row select,
+    .activity-row .activity-end,
+    .activity-row .duration-unit,
+    .activity-row .time-arrow {
+      font-weight: bold;
+      color: #1a1a1a;
     }
     .activity-row:hover {
       background: #F5F0FF;
@@ -133,6 +143,7 @@
       border-radius: 10px;
       font-size: 15px;
       font-family: inherit;
+      font-weight: bold;
       color: #333;
       background: #fff;
       outline: none;
@@ -145,22 +156,36 @@
       color: #bbb;
     }
 
-    /* 时间选择器 */
+    /* 时间区间：开始时间 → 结束时间 */
+    .time-range {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #F8F6FF;
+      border: 1.5px solid #E0D8F0;
+      border-radius: 12px;
+      padding: 4px 8px;
+    }
+    .time-arrow {
+      font-size: 16px;
+      color: #8B5CF6;
+      font-weight: bold;
+      user-select: none;
+    }
     .activity-time {
-      width: 90px;
-      padding: 8px 10px;
-      border: 1.5px solid #E0E8F0;
-      border-radius: 10px;
+      width: 82px;
+      padding: 6px 4px;
+      border: none;
+      background: transparent;
       font-size: 14px;
       font-family: inherit;
+      font-weight: bold;
       color: #333;
-      background: #fff;
       outline: none;
       cursor: pointer;
-      transition: border-color 0.2s;
     }
     .activity-time:focus {
-      border-color: #8B5CF6;
+      color: #8B5CF6;
     }
 
     /* 持续时长：数字 + 分钟 一体 */
@@ -183,6 +208,7 @@
       border-radius: 0;
       font-size: 14px;
       font-family: inherit;
+      font-weight: bold;
       color: #333;
       background: transparent;
       outline: none;
@@ -191,7 +217,8 @@
     .duration-unit {
       padding: 8px 10px 8px 2px;
       font-size: 13px;
-      color: #888;
+      font-weight: bold;
+      color: #7B5B8C;
       user-select: none;
       background: #F5F5FF;
       white-space: nowrap;
@@ -199,15 +226,15 @@
 
     /* 结束时间显示 */
     .activity-end {
-      font-size: 13px;
-      color: #7B5B8C;
+      font-size: 14px;
+      font-weight: bold;
+      color: #7B3F9E;
       white-space: nowrap;
-      min-width: 60px;
+      min-width: 55px;
       text-align: center;
-      background: #FFF5FA;
-      border: 1.5px solid #F0D5E8;
-      border-radius: 10px;
-      padding: 4px 8px;
+      background: transparent;
+      border: none;
+      padding: 0;
     }
 
     /* 删除按钮 */
@@ -635,10 +662,17 @@
         font-size: 16px;       /* 防止 iOS 缩放 */
         padding: 10px 12px;
       }
+      .time-range {
+        padding: 3px 6px;
+        gap: 4px;
+      }
       .activity-time {
-        width: 78px;
+        width: 72px;
         font-size: 14px;
-        padding: 10px 8px;
+        padding: 8px 2px;
+      }
+      .time-arrow {
+        font-size: 14px;
       }
       .duration-box {
         border-radius: 10px;
@@ -652,8 +686,9 @@
         padding: 10px 8px 10px 2px;
       }
       .activity-end {
-        font-size: 12px;
+        font-size: 14px;
         min-width: auto;
+        font-weight: bold;
       }
       .btn-delete {
         width: 36px;
@@ -839,11 +874,14 @@
         var lockClass = act.locked ? 'btn-lock-row locked' : 'btn-lock-row';
         html += '<div class="' + rowClass + '" data-id="' + act.id + '">'
               + '<input class="activity-name" type="text" value="' + escAttr(act.name) + '" placeholder="活动名称">'
+              + '<span class="time-range">'
               + '<input class="activity-time" type="time" value="' + act.startTime + '">'
+              + '<span class="time-arrow">→</span>'
+              + '<span class="activity-end">' + endTime + '</span>'
+              + '</span>'
               + '<span class="duration-box">'
               + '<input class="activity-duration" type="number" value="' + act.duration + '" min="1" max="480" step="5">'
               + '<span class="duration-unit">分钟</span></span>'
-              + '<span class="activity-end">→ ' + endTime + '</span>'
               + '<button class="btn-lock-row' + (act.locked ? ' locked' : '') + '" title="锁定时间">' + lockIcon + '</button>'
               + '<button class="btn-delete" title="删除">×</button>'
               + '</div>';
@@ -947,7 +985,7 @@
       var startTime = timeInput.value;
       var duration = parseInt(durationInput.value, 10);
       if (isNaN(duration) || duration < 1) duration = 30;
-      endSpan.textContent = '→ ' + calcEndTime(startTime, duration);
+      endSpan.textContent = calcEndTime(startTime, duration);
     }
 
     // ---------- 数据同步 ----------
